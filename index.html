@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ENIGMA - FASE 5</title>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <style>
+    /* ================= TEMA: CINEMA RETRÔ / VINTAGE LOVE ================= */
+    :root {
+      --bg-color: #1a1512;
+      --paper: #f4ecd8;
+      --accent: #8a2323;
+      --gold: #c5a059;
+      --text: #2c241b;
+      
+      --font-title: 'Courier Prime', monospace;
+      --font-body: 'Garamond', serif;
+      
+      --success: #2e8b57;
+      --error: #b33939;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');
+
+    html, body {
+      height: 100%; margin: 0; padding: 0;
+      background-color: var(--bg-color);
+      color: var(--text);
+      font-family: var(--font-body);
+      overflow-x: hidden; user-select: none;
+      touch-action: none; /* Melhora jogos de toque */
+    }
+
+    /* === FIX: FILTRO DE RUÍDO (FILM GRAIN) === */
+    body::before {
+      content: ""; position: fixed; top: -100%; left: -100%; width: 300%; height: 300%;
+      background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noise)" opacity="0.15"/%3E%3C/svg%3E');
+      pointer-events: none; z-index: 998; animation: filmGrain 0.8s steps(10) infinite; opacity: 0.4;
+    }
+    body::after {
+      content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.6) 100%);
+      pointer-events: none; z-index: 999;
+    }
+    @keyframes filmGrain {
+      0% { transform: translate(0, 0); } 10% { transform: translate(-5%, -5%); } 50% { transform: translate(-10%, 5%); } 100% { transform: translate(5%, 0); }
+    }
+
+    body {
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      padding: 20px; box-sizing: border-box;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    /* ================= CARDS ================= */
+    .card {
+      width: 100%; max-width: 420px;
+      background: var(--paper);
+      border: 4px double var(--text);
+      box-shadow: 0 0 0 10px rgba(0,0,0,0.5), 0 20px 50px rgba(0,0,0,0.7);
+      border-radius: 5px; padding: 30px 25px; text-align: center;
+      position: relative; animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+      display: flex; flex-direction: column; align-items: center; z-index: 1000;
+    }
+    .card::after, .card::before {
+        content: ""; position: absolute; height: 100%; width: 15px; top: 0;
+        background-image: radial-gradient(circle, var(--bg-color) 3px, transparent 4px);
+        background-size: 10px 20px; background-position: center;
+    }
+    .card::before { left: 5px; border-right: 1px solid rgba(0,0,0,0.2); }
+    .card::after { right: 5px; border-left: 1px solid rgba(0,0,0,0.2); }
+
+    @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+    h2 { 
+      font-family: var(--font-title); font-weight: 700; text-transform: uppercase;
+      color: var(--text); font-size: 1.6rem; margin-bottom: 15px; 
+      border-bottom: 2px solid var(--accent); padding-bottom: 10px; width: 90%;
+    }
+    p { font-size: 1.1rem; line-height: 1.5; color: #4a3b2a; margin-bottom: 25px; font-style: italic; width: 90%; }
+    .hidden { display: none !important; }
+
+    /* INPUTS & BUTTONS */
+    input {
+      width: 85%; background: transparent;
+      border: none; border-bottom: 2px solid var(--text);
+      color: var(--accent); padding: 10px; text-align: center;
+      margin-top: 10px; font-size: 1.3rem; outline: none;
+      font-family: var(--font-title); transition: 0.3s;
+    }
+    input:focus { border-bottom-color: var(--accent); background: rgba(138, 35, 35, 0.05); }
+    
+    .btn-action {
+      width: 90%; background: var(--text); color: var(--paper); border: 1px solid var(--gold);
+      padding: 15px; cursor: pointer; margin-top: 30px; text-transform: uppercase; letter-spacing: 2px; font-family: var(--font-title);
+      transition: 0.2s; font-weight: bold;
+    }
+    .btn-action:hover { background: var(--accent); color: #fff; }
+    .btn-action:active { transform: scale(0.98); }
+
+    .btn-copy {
+      background: transparent; border: 1px solid var(--text); color: var(--text);
+      padding: 5px 15px; font-size: 0.7rem; cursor: pointer;
+      margin-bottom: 20px; font-family: var(--font-title);
+    }
+    .feedback { min-height: 20px; font-size: 0.9rem; margin-top: 15px; font-family: var(--font-title); color: var(--error); }
+
+    /* ================= GAME 1: FOCO ================= */
+    .focus-container {
+        width: 100%; max-width: 280px; aspect-ratio: 17/21; height: auto;
+        position: relative; overflow: hidden; margin: 0 auto 20px auto;
+        background: #000; border: 4px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    .blur-target {
+        width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;
+        background: url('foto.jpg') center/cover no-repeat; filter: blur(20px);
+    }
+    .blur-text-fallback {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        color: #fff; font-size: 2rem; font-weight: bold; text-shadow: 0 2px 5px #000;
+        z-index: 2; pointer-events: none; opacity: 0.8;
+    }
+    input[type=range] { width: 90%; -webkit-appearance: none; background: transparent; border: none; margin: 20px 0; }
+    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; background: var(--text); border-radius: 5px; }
+    input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none; height: 25px; width: 25px; border-radius: 50%;
+        background: var(--accent); margin-top: -8px; cursor: pointer; border: 2px solid var(--paper);
+    }
+
+    /* ================= GAME 2: PROJETOR ================= */
+    .projector-window {
+        width: 250px; height: 120px; overflow: hidden; position: relative;
+        border-top: 5px solid var(--text); border-bottom: 5px solid var(--text);
+        background: #000; margin: 20px auto; display: flex; align-items: center;
+    }
+    .projector-target {
+        position: absolute; left: 50%; top: 0; bottom: 0; width: 80px; transform: translateX(-50%);
+        border: 3px solid var(--error); z-index: 10; box-shadow: 0 0 15px rgba(180,0,0,0.5); pointer-events: none;
+    }
+    .film-strip { display: flex; position: absolute; left: 0; top: 10px; }
+    .film-frame {
+        width: 80px; height: 80px; margin: 0 10px; background: #fff;
+        display: flex; justify-content: center; align-items: center;
+        font-size: 2rem; border-radius: 5px; color: #333;
+    }
+    .film-frame.heart { color: var(--accent); }
+
+    /* ================= GAME 3: PIPOCA (NOVO) ================= */
+    .popcorn-container {
+        width: 100%; height: 250px; background: #2c241b; border: 4px solid var(--gold);
+        position: relative; overflow: hidden; margin-bottom: 10px; touch-action: none;
+    }
+    .pop-bucket {
+        position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+        width: 60px; height: 60px; font-size: 3rem; 
+        display: flex; justify-content: center; align-items: center;
+        user-select: none; cursor: grab; z-index: 5;
+    }
+    .pop-kernel {
+        position: absolute; top: -30px; font-size: 1.5rem;
+    }
+    .pop-score {
+        position: absolute; top: 10px; right: 10px; color: var(--paper); 
+        font-family: var(--font-title); font-size: 1.2rem;
+    }
+
+    /* ================= FINAL SCREEN ================= */
+    .code-box {
+      background: #1a1512; border: 2px solid var(--text);
+      color: var(--paper); padding: 15px; font-size: 1.2rem; width: 90%;
+      margin: 10px 0; word-break: break-all; font-family: var(--font-title); letter-spacing: 3px; font-weight: bold;
+    }
+    .timer-display {
+      font-size: 2.2rem; color: var(--accent); margin: 15px 0; font-weight: 700; font-family: var(--font-title);
+    }
+    .final-photo-frame {
+        width: 200px; height: 200px; padding: 10px; background: #fff;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3); transform: rotate(-3deg);
+        margin: 20px auto;
+    }
+    .final-photo-frame img { width: 100%; height: 100%; object-fit: cover; filter: sepia(0.6) contrast(1.1); }
+    
+    .ticket-stub {
+        background: var(--accent); color: var(--paper); padding: 15px;
+        border: 2px dashed var(--paper); margin: 20px 0; width: 90%;
+        font-family: var(--font-title);
+    }
+    
+    .video-wrapper {
+        width: 100%; max-width: 250px; 
+        border: 5px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.4); 
+        margin: 10px auto; display: block; background: #000;
+    }
+    video { width: 100%; display: block; }
+  </style>
+</head>
+<body>
+
+  <div class="card" id="screenPassword">
+    <h2>🔐 ACESSO RESTRITO</h2>
+    <h3>Cena 05: Memórias</h3>
+    <p>A imagem está invertida. Revele o filme.</p>
+    <div class="code-box" id="cipherText">NVNLIZZ</div>
+    <button class="btn-copy" onclick="copyCode()">COPIAR</button>
+	<p style="font-size: 0.85rem; color: var(--accent);">Dica: (A=Z, B=Y...)</p>
+    <input id="passInput" placeholder="Senha..." style="text-transform: uppercase;">
+    <button class="btn-action" onclick="checkPhasePass()">Rodar Filme</button>
+    <div id="passFeedback" class="feedback"></div>
+  </div>
+
+  <div class="card hidden" id="screenIntro">
+    <h2>Nossa História</h2>
+    <p>Bem-vinda à sala de projeção.</p>
+    <p>Aqui guardamos nossos melhores takes, momentos e memórias. Te trouxe aqui pois fiquei sabendo que você tem uma ótima memória, mas a imagem está um pouco fora de foco...</p>
+	<p>Preciso da sua ajuda.</p>
+    <button class="btn-action" onclick="nextScreen('screenQ1')">Ação!</button>
+  </div>
+
+  <div class="card hidden" id="screenQ1">
+    <h2>Take 01</h2>
+    <p>"Qual foi o primeiro filme (ou série) que assistimos juntos?"</p>
+    <input id="inputQ1" placeholder="Título...">
+    <button class="btn-action" onclick="checkQ1()">Corta!</button>
+    <div id="feedQ1" class="feedback"></div>
+  </div>
+
+  <div class="card hidden" id="screenGame1">
+    <h2>Ajuste o Foco</h2>
+    <p>Use a lente para encontrar a nitidez perfeita.</p>
+    <div class="focus-container">
+        <div class="blur-target" id="focusTarget"></div>
+    </div>
+    <input type="range" id="focusSlider" min="0" max="100" value="0" oninput="updateFocus()">
+    <button id="btnFocus" class="btn-action" onclick="checkFocus()">TIRAR FOTO</button>
+    <div id="focusMsg" class="feedback"></div>
+  </div>
+
+  <div class="card hidden" id="screenQ2">
+    <h2>Take 02</h2>
+    <p>"Qual é a minha franquia favorita de terror slasher?"</p>
+    <input id="inputQ2" placeholder="Nome...">
+    <button class="btn-action" onclick="checkQ2()">Corta!</button>
+    <div id="feedQ2" class="feedback"></div>
+  </div>
+
+  <div class="card hidden" id="screenGame2">
+    <h2>O Rolo de Filme</h2>
+    <p>Clique em <b>PAUSAR</b> quando o Coração (❤️) estiver na moldura vermelha.</p>
+    <div class="projector-window">
+        <div class="projector-target"></div>
+        <div class="film-strip" id="filmStrip"></div>
+    </div>
+    <button id="btnProjector" class="btn-action" onclick="stopFilm()">PAUSAR</button>
+    <button id="btnProjectorReset" class="btn-action hidden" onclick="startProjector()">Rebobinar</button>
+    <div id="projMsg" class="feedback"></div>
+  </div>
+
+  <div class="card hidden" id="screenGame3">
+    <h2>Intervalo: Hora da Pipoca</h2>
+    <p>Arraste o balde para pegar <b>10 pipocas</b> antes do filme começar!</p>
+    
+    <div class="popcorn-container" id="popcornArea">
+        <div class="pop-score" id="popScore">0/10</div>
+        <div class="pop-bucket" id="bucket">🍿</div>
+    </div>
+
+    <button id="btnPopcornStart" class="btn-action" onclick="startPopcornGame()">INICIAR</button>
+    <div id="popMsg" class="feedback"></div>
+  </div>
+
+  <div class="card hidden" id="screenQ3">
+    <h2>Take Final</h2>
+    <p>"O que é meu, mas só você pode ter?"</p>
+    <input id="inputQ3" placeholder="Sua resposta...">
+    <button class="btn-action" onclick="checkQ3()">Finalizar</button>
+    <div id="feedQ3" class="feedback"></div>
+  </div>
+
+  <div class="card hidden" id="screenFinal">
+    <h2>Fim da Cena</h2>
+    <p>Nossa história merece um Oscar.</p>
+    
+    <div class="final-photo-frame">
+        <img src="foto2.jpg" alt="Nossa Foto" onerror="this.style.display='none'">
+    </div>
+
+    <div class="ticket-stub">
+      <p style="text-transform: uppercase; font-size: 0.8rem; letter-spacing: 2px; margin-bottom:10px;">INGRESSOS - PISTA 5:</p>
+      <div class="video-wrapper">
+        <video controls>
+            <source src="pista.mp4" type="video/mp4">
+            Seu navegador não suporta vídeos.
+        </video>
+      </div>
+    </div>
+
+    <div style="border-top: 2px solid var(--text); padding-top: 15px; width: 100%;">
+      <p>Estreia da próxima fase em:</p>
+      <div class="timer-display" id="countdownDisplay">12:00:00</div>
+    </div>
+  </div>
+
+<script>
+  /* ================= CONFIGURAÇÕES ================= */
+  const PHASE_PASS = "MEMORIA";   
+  const ANSWER_1 = "projeto x";     
+  const ANSWER_2 = "pânico";       
+  const ANSWER_3 = "coração";     
+  const UNLOCK_HOURS = 12;        
+
+  /* ================= ÁUDIO ================= */
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  function playTone(freq, type='sine', decay=1) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + decay);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + decay);
+  }
+  function soundSuccess() { playTone(523.25,'triangle',1); setTimeout(()=>playTone(659.25,'triangle',1), 200); setTimeout(()=>playTone(783.99,'triangle',1.5), 400); }
+  function soundError() { playTone(100,'sawtooth',0.5); }
+  function soundClick() { playTone(1500,'sine',0.05); }
+  function soundPop() { playTone(800, 'square', 0.1); }
+
+  /* ================= NAVEGAÇÃO ================= */
+  function nextScreen(id) {
+    document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+  }
+  window.onload = () => {
+    if(localStorage.getItem('fase5_complete')) { nextScreen('screenFinal'); startCountdown(); }
+  };
+
+  /* --- LOGICA --- */
+  function copyCode() { navigator.clipboard.writeText(document.getElementById('cipherText').innerText); }
+  function checkPhasePass() { if (passInput.value.trim().toUpperCase() === PHASE_PASS) { soundSuccess(); nextScreen('screenIntro'); } else { soundError(); passFeedback.innerText = "Chave inválida."; } }
+  function checkQ1() { if (inputQ1.value.trim().toLowerCase().includes(ANSWER_1)) { soundSuccess(); nextScreen('screenGame1'); initFocusGame(); } else { soundError(); feedQ1.innerText = "Corte! Tente de novo."; } }
+  function checkQ2() { if (inputQ2.value.trim().toLowerCase().includes(ANSWER_2)) { soundSuccess(); nextScreen('screenGame2'); startProjector(); } else { soundError(); feedQ2.innerText = "Data errada."; } }
+  function checkQ3() { if (inputQ3.value.trim().toLowerCase().includes(ANSWER_3)) { soundSuccess(); nextScreen('screenFinal'); fireVintageConfetti(); localStorage.setItem('fase5_complete','true'); if(!localStorage.getItem('fase6_unlock')) localStorage.setItem('fase6_unlock', Date.now() + (UNLOCK_HOURS*60*60*1000)); startCountdown(); } else { soundError(); feedQ3.innerText = "Resposta incorreta."; } }
+
+  /* --- GAME 1: O FOCO --- */
+  let targetFocus = 0;
+  function initFocusGame() { targetFocus = Math.floor(Math.random() * 60) + 20; updateFocus(); }
+  function updateFocus() {
+      const val = parseInt(document.getElementById('focusSlider').value);
+      const diff = Math.abs(val - targetFocus);
+      const blurAmount = Math.min(20, diff / 2); 
+      document.getElementById('focusTarget').style.filter = `blur(${blurAmount}px)`;
+      if(diff < 5) document.getElementById('focusTarget').style.borderColor = "var(--success)";
+      else document.getElementById('focusTarget').style.borderColor = "transparent";
+  }
+  function checkFocus() {
+      const val = parseInt(document.getElementById('focusSlider').value);
+      const diff = Math.abs(val - targetFocus);
+      if(diff < 5) { soundSuccess(); document.getElementById('focusMsg').innerText = "FOTO PERFEITA!"; document.getElementById('focusMsg').style.color = "var(--success)"; setTimeout(() => nextScreen('screenQ2'), 1500); } 
+      else { soundError(); document.getElementById('focusMsg').innerText = "Imagem borrada."; }
+  }
+
+  /* --- GAME 2: O PROJETOR --- */
+  let filmAnim, filmPos = 0, filmSpeed = 4;
+  const frames = ["★", "☁", "☂", "❤️", "☀", "♫", "⚓", "♦"];
+  const strip = document.getElementById('filmStrip');
+  function startProjector() {
+      document.getElementById('btnProjector').classList.remove('hidden'); document.getElementById('btnProjectorReset').classList.add('hidden'); document.getElementById('projMsg').innerText = ""; strip.innerHTML = "";
+      for(let i=0; i<100; i++) { const f = document.createElement('div'); f.className = 'film-frame'; const content = frames[i % frames.length]; f.innerText = content; if(content === "❤️") f.classList.add('heart'); strip.appendChild(f); }
+      filmPos = 0; animateFilm();
+  }
+  function animateFilm() { filmPos -= filmSpeed; if(filmPos < -3000) filmPos = 0; strip.style.transform = `translateX(${filmPos}px)`; filmAnim = requestAnimationFrame(animateFilm); }
+  function stopFilm() {
+      cancelAnimationFrame(filmAnim);
+      const targetBox = document.querySelector('.projector-target').getBoundingClientRect();
+      const centerX = targetBox.left + targetBox.width / 2; const centerY = targetBox.top + targetBox.height / 2;
+      document.querySelector('.projector-target').style.pointerEvents = 'none';
+      const el = document.elementFromPoint(centerX, centerY);
+      if(el && el.classList.contains('heart')) { soundSuccess(); document.getElementById('projMsg').innerText = "CENA CAPTURADA!"; document.getElementById('projMsg').style.color = "var(--success)"; setTimeout(() => { nextScreen('screenGame3'); startPopcornGameSetup(); }, 1500); } 
+      else { soundError(); document.getElementById('projMsg').innerText = "Cena errada."; document.getElementById('btnProjector').classList.add('hidden'); document.getElementById('btnProjectorReset').classList.remove('hidden'); }
+  }
+
+  /* --- GAME 3: PIPOCA --- */
+  let popScore = 0;
+  let popGameActive = false;
+  let popInterval;
+  let bucketPos = 50; // Porcentagem
+
+  function startPopcornGameSetup() {
+      // Apenas prepara a tela, mas não começa a cair
+  }
+
+  function startPopcornGame() {
+      document.getElementById('btnPopcornStart').classList.add('hidden');
+      popScore = 0;
+      popGameActive = true;
+      document.getElementById('popScore').innerText = "0/10";
+      
+      // Controle do balde (Mouse/Touch)
+      const area = document.getElementById('popcornArea');
+      
+      const moveBucket = (clientX) => {
+          if(!popGameActive) return;
+          const rect = area.getBoundingClientRect();
+          let x = clientX - rect.left;
+          bucketPos = (x / rect.width) * 100;
+          if(bucketPos < 5) bucketPos = 5;
+          if(bucketPos > 95) bucketPos = 95;
+          document.getElementById('bucket').style.left = bucketPos + "%";
+      };
+
+      area.addEventListener('mousemove', (e) => moveBucket(e.clientX));
+      area.addEventListener('touchmove', (e) => moveBucket(e.touches[0].clientX));
+
+      // Spawner
+      popInterval = setInterval(spawnKernel, 800);
+  }
+
+  function spawnKernel() {
+      if(!popGameActive) return;
+      const area = document.getElementById('popcornArea');
+      const k = document.createElement('div');
+      k.innerText = "🍿";
+      k.className = "pop-kernel";
+      k.style.left = Math.random() * 90 + 5 + "%";
+      area.appendChild(k);
+
+      let top = -30;
+      const fall = setInterval(() => {
+          if(!popGameActive) { clearInterval(fall); k.remove(); return; }
+          top += 5;
+          k.style.top = top + "px";
+
+          // Colisao
+          if (top > 200) { // Altura do bucket area
+              // Verifica colisão horizontal
+              const kLeft = parseFloat(k.style.left);
+              if (Math.abs(kLeft - bucketPos) < 15) { // Hit
+                  popScore++;
+                  document.getElementById('popScore').innerText = popScore + "/10";
+                  soundPop();
+                  k.remove();
+                  clearInterval(fall);
+                  if(popScore >= 10) winPopGame();
+              } else if (top > 230) {
+                  k.remove();
+                  clearInterval(fall);
+              }
+          }
+      }, 50);
+  }
+
+  function winPopGame() {
+      popGameActive = false;
+      clearInterval(popInterval);
+      soundSuccess();
+      document.getElementById('popMsg').innerText = "PIPOCA GARANTIDA!";
+      document.getElementById('popMsg').style.color = "var(--success)";
+      setTimeout(() => nextScreen('screenQ3'), 1500);
+  }
+
+  /* --- FINAL --- */
+  function fireVintageConfetti() { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#8a2323', '#c5a059', '#f4ecd8'] }); }
+  function startCountdown() {
+    const unlockTime = parseInt(localStorage.getItem('fase6_unlock'));
+    const display = document.getElementById("countdownDisplay");
+    setInterval(() => {
+      const now = Date.now(); const diff = unlockTime - now;
+      if (diff <= 0) { display.innerText = "PRÓXIMA FASE DISPONÍVEL"; display.style.color = "var(--success)"; return; }
+      const h = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+      const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+      display.innerText = `${h}:${m}:${s}`;
+    }, 1000);
+  }
+</script>
+</body>
+</html>
