@@ -24,13 +24,25 @@
 
     @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');
 
-    html, body {
+    html {
       height: 100%; margin: 0; padding: 0;
+    }
+
+    body {
+      min-height: 100vh; /* Permite rolagem se o conteúdo for maior */
+      margin: 0; padding: 20px;
       background-color: var(--bg-color);
       color: var(--text);
       font-family: var(--font-body);
-      overflow-x: hidden; user-select: none;
-      touch-action: none; /* Melhora jogos de toque */
+      overflow-x: hidden; 
+      user-select: none;
+      /* CORREÇÃO: Removido touch-action: none daqui para permitir scroll */
+      
+      display: flex; 
+      flex-direction: column;
+      justify-content: center; 
+      align-items: center;
+      box-sizing: border-box;
     }
 
     /* === FIX: FILTRO DE RUÍDO (FILM GRAIN) === */
@@ -48,12 +60,6 @@
       0% { transform: translate(0, 0); } 10% { transform: translate(-5%, -5%); } 50% { transform: translate(-10%, 5%); } 100% { transform: translate(5%, 0); }
     }
 
-    body {
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center;
-      padding: 20px; box-sizing: border-box;
-    }
-
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     /* ================= CARDS ================= */
@@ -65,6 +71,7 @@
       border-radius: 5px; padding: 30px 25px; text-align: center;
       position: relative; animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
       display: flex; flex-direction: column; align-items: center; z-index: 1000;
+      margin: auto; /* Ajuda a centralizar se a tela for grande */
     }
     .card::after, .card::before {
         content: ""; position: absolute; height: 100%; width: 15px; top: 0;
@@ -149,10 +156,11 @@
     }
     .film-frame.heart { color: var(--accent); }
 
-    /* ================= GAME 3: PIPOCA (NOVO) ================= */
+    /* ================= GAME 3: PIPOCA (CORRIGIDO PARA MOBILE) ================= */
     .popcorn-container {
         width: 100%; height: 250px; background: #2c241b; border: 4px solid var(--gold);
-        position: relative; overflow: hidden; margin-bottom: 10px; touch-action: none;
+        position: relative; overflow: hidden; margin-bottom: 10px;
+        touch-action: none; /* BLOQUEIA SCROLL SÓ DENTRO DO JOGO */
     }
     .pop-bucket {
         position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
@@ -192,8 +200,10 @@
     
     .video-wrapper {
         width: 100%; max-width: 250px; 
-        border: 5px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.4); 
-        margin: 10px auto; display: block; background: #000;
+        border: 5px solid #fff; 
+        box-shadow: 0 5px 15px rgba(0,0,0,0.4); 
+        margin: 10px auto; display: block;
+        background: #000;
     }
     video { width: 100%; display: block; }
   </style>
@@ -214,7 +224,7 @@
 
   <div class="card hidden" id="screenIntro">
     <h2>Nossa História</h2>
-    <p>Bem-vinda à sala de projeção.</p>
+    <p>Bem-vinda à sala de projeção da Cena 05.</p>
     <p>Aqui guardamos nossos melhores takes, momentos e memórias. Te trouxe aqui pois fiquei sabendo que você tem uma ótima memória, mas a imagem está um pouco fora de foco...</p>
 	<p>Preciso da sua ajuda.</p>
     <button class="btn-action" onclick="nextScreen('screenQ1')">Ação!</button>
@@ -290,12 +300,14 @@
 
     <div class="ticket-stub">
       <p style="text-transform: uppercase; font-size: 0.8rem; letter-spacing: 2px; margin-bottom:10px;">INGRESSOS - PISTA 5:</p>
+      
       <div class="video-wrapper">
         <video controls>
             <source src="pista.mp4" type="video/mp4">
             Seu navegador não suporta vídeos.
         </video>
       </div>
+      
     </div>
 
     <div style="border-top: 2px solid var(--text); padding-top: 15px; width: 100%;">
@@ -389,7 +401,7 @@
   let bucketPos = 50; // Porcentagem
 
   function startPopcornGameSetup() {
-      // Apenas prepara a tela, mas não começa a cair
+      // Prepara
   }
 
   function startPopcornGame() {
@@ -398,7 +410,6 @@
       popGameActive = true;
       document.getElementById('popScore').innerText = "0/10";
       
-      // Controle do balde (Mouse/Touch)
       const area = document.getElementById('popcornArea');
       
       const moveBucket = (clientX) => {
@@ -411,10 +422,10 @@
           document.getElementById('bucket').style.left = bucketPos + "%";
       };
 
+      // Mouse e Touch
       area.addEventListener('mousemove', (e) => moveBucket(e.clientX));
       area.addEventListener('touchmove', (e) => moveBucket(e.touches[0].clientX));
 
-      // Spawner
       popInterval = setInterval(spawnKernel, 800);
   }
 
@@ -433,9 +444,7 @@
           top += 5;
           k.style.top = top + "px";
 
-          // Colisao
-          if (top > 200) { // Altura do bucket area
-              // Verifica colisão horizontal
+          if (top > 200) { // Altura do balde
               const kLeft = parseFloat(k.style.left);
               if (Math.abs(kLeft - bucketPos) < 15) { // Hit
                   popScore++;
