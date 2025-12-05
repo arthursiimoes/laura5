@@ -36,7 +36,6 @@
       font-family: var(--font-body);
       overflow-x: hidden; 
       user-select: none;
-      /* CORREÇÃO: Removido touch-action: none daqui para permitir scroll */
       
       display: flex; 
       flex-direction: column;
@@ -71,7 +70,7 @@
       border-radius: 5px; padding: 30px 25px; text-align: center;
       position: relative; animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
       display: flex; flex-direction: column; align-items: center; z-index: 1000;
-      margin: auto; /* Ajuda a centralizar se a tela for grande */
+      margin: auto;
     }
     .card::after, .card::before {
         content: ""; position: absolute; height: 100%; width: 15px; top: 0;
@@ -156,11 +155,11 @@
     }
     .film-frame.heart { color: var(--accent); }
 
-    /* ================= GAME 3: PIPOCA (CORRIGIDO PARA MOBILE) ================= */
+    /* ================= GAME 3: PIPOCA ================= */
     .popcorn-container {
         width: 100%; height: 250px; background: #2c241b; border: 4px solid var(--gold);
         position: relative; overflow: hidden; margin-bottom: 10px;
-        touch-action: none; /* BLOQUEIA SCROLL SÓ DENTRO DO JOGO */
+        touch-action: none;
     }
     .pop-bucket {
         position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
@@ -182,9 +181,7 @@
       color: var(--paper); padding: 15px; font-size: 1.2rem; width: 90%;
       margin: 10px 0; word-break: break-all; font-family: var(--font-title); letter-spacing: 3px; font-weight: bold;
     }
-    .timer-display {
-      font-size: 2.2rem; color: var(--accent); margin: 15px 0; font-weight: 700; font-family: var(--font-title);
-    }
+    /* Classe timer removida ou reutilizada se quiser */
     .final-photo-frame {
         width: 200px; height: 200px; padding: 10px; background: #fff;
         box-shadow: 0 10px 25px rgba(0,0,0,0.3); transform: rotate(-3deg);
@@ -311,8 +308,9 @@
     </div>
 
     <div style="border-top: 2px solid var(--text); padding-top: 15px; width: 100%;">
-      <p>Estreia da próxima fase em:</p>
-      <div class="timer-display" id="countdownDisplay">12:00:00</div>
+      <button class="btn-action" onclick="window.location.href='https://arthursiimoes.github.io/laura6'">
+        IR PARA FASE FINAL 🎬
+      </button>
     </div>
   </div>
 
@@ -322,7 +320,7 @@
   const ANSWER_1 = "projeto x";     
   const ANSWER_2 = "pânico";       
   const ANSWER_3 = "coração";     
-  const UNLOCK_HOURS = 12;        
+  // UNLOCK_HOURS removido
 
   /* ================= ÁUDIO ================= */
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -346,7 +344,7 @@
     document.getElementById(id).classList.remove('hidden');
   }
   window.onload = () => {
-    if(localStorage.getItem('fase5_complete')) { nextScreen('screenFinal'); startCountdown(); }
+    if(localStorage.getItem('fase5_complete')) { nextScreen('screenFinal'); }
   };
 
   /* --- LOGICA --- */
@@ -354,7 +352,7 @@
   function checkPhasePass() { if (passInput.value.trim().toUpperCase() === PHASE_PASS) { soundSuccess(); nextScreen('screenIntro'); } else { soundError(); passFeedback.innerText = "Chave inválida."; } }
   function checkQ1() { if (inputQ1.value.trim().toLowerCase().includes(ANSWER_1)) { soundSuccess(); nextScreen('screenGame1'); initFocusGame(); } else { soundError(); feedQ1.innerText = "Corte! Tente de novo."; } }
   function checkQ2() { if (inputQ2.value.trim().toLowerCase().includes(ANSWER_2)) { soundSuccess(); nextScreen('screenGame2'); startProjector(); } else { soundError(); feedQ2.innerText = "Data errada."; } }
-  function checkQ3() { if (inputQ3.value.trim().toLowerCase().includes(ANSWER_3)) { soundSuccess(); nextScreen('screenFinal'); fireVintageConfetti(); localStorage.setItem('fase5_complete','true'); if(!localStorage.getItem('fase6_unlock')) localStorage.setItem('fase6_unlock', Date.now() + (UNLOCK_HOURS*60*60*1000)); startCountdown(); } else { soundError(); feedQ3.innerText = "Resposta incorreta."; } }
+  function checkQ3() { if (inputQ3.value.trim().toLowerCase().includes(ANSWER_3)) { soundSuccess(); nextScreen('screenFinal'); fireVintageConfetti(); localStorage.setItem('fase5_complete','true'); } else { soundError(); feedQ3.innerText = "Resposta incorreta."; } }
 
   /* --- GAME 1: O FOCO --- */
   let targetFocus = 0;
@@ -472,19 +470,8 @@
 
   /* --- FINAL --- */
   function fireVintageConfetti() { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#8a2323', '#c5a059', '#f4ecd8'] }); }
-  function startCountdown() {
-    const unlockTime = parseInt(localStorage.getItem('fase6_unlock'));
-    const display = document.getElementById("countdownDisplay");
-    setInterval(() => {
-      const now = Date.now(); const diff = unlockTime - now;
-      if (diff <= 0) { display.innerText = "PRÓXIMA FASE DISPONÍVEL"; display.style.color = "var(--success)"; return; }
-      const h = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
-      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-      const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
-      display.innerText = `${h}:${m}:${s}`;
-    }, 1000);
-  }
+  
+  // startCountdown() REMOVIDO
 </script>
 </body>
 </html>
-
